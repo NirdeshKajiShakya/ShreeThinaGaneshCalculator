@@ -17,14 +17,31 @@ app.get('/', (req, res) => {
 app.get('/health', (req, res) => {
     res.status(200).json({ 
         status: 'OK', 
-        message: 'Nepal Silver Price Tracker is running',
+        message: 'Nepal Gold & Silver Price Tracker is running',
         timestamp: new Date().toISOString()
     });
 });
 
-// API endpoint for future silver price integration
-app.get('/api/silver-price', (req, res) => {
+// API endpoint for future metal price integration
+app.get('/api/metal-price', (req, res) => {
+    const metal = req.query.metal || 'gold';
     // This is a placeholder - in production, fetch from real API
+    const basePrices = {
+        gold: 12500 + (Math.random() - 0.5) * 50,
+        silver: 150 + (Math.random() - 0.5) * 5
+    };
+    
+    res.json({
+        metal: metal,
+        pricePerGram: basePrices[metal].toFixed(2),
+        currency: 'NPR',
+        timestamp: new Date().toISOString(),
+        source: 'simulated'
+    });
+});
+
+// Legacy endpoint for backward compatibility
+app.get('/api/silver-price', (req, res) => {
     const basePrice = 150 + (Math.random() - 0.5) * 5;
     res.json({
         pricePerGram: basePrice.toFixed(2),
@@ -41,6 +58,6 @@ app.use((req, res) => {
 
 // Start the server
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🪙 Nepal Silver Price Tracker is running on port ${PORT}`);
+    console.log(`🪙✨ Nepal Gold & Silver Price Tracker is running on port ${PORT}`);
     console.log(`📊 Access the app at: http://localhost:${PORT}`);
 });

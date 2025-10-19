@@ -1,6 +1,10 @@
-// Silver Price Tracker Application
-class SilverPriceTracker {
+// Gold & Silver Price Tracker Application
+class MetalPriceTracker {
     constructor() {
+        // Current selected metal
+        this.currentMetal = 'gold'; // 'gold' or 'silver'
+        this.currentPurity = 24; // For gold only (24K, 22K, 21K, 18K)
+
         // Conversion factors
         this.conversions = {
             gram: 1,
@@ -13,8 +17,19 @@ class SilverPriceTracker {
             ratti: 0.1215 // 1 ratti = 0.1215 grams
         };
 
-        // Base price per gram in NPR
-        this.basePricePerGram = 150.00; // Default starting price
+        // Base prices per gram in NPR (24K gold and pure silver)
+        this.prices = {
+            gold: 12500.00,  // Default gold price per gram (24K)
+            silver: 150.00   // Default silver price per gram
+        };
+
+        // Gold purity factors
+        this.purityFactors = {
+            24: 1.0,      // 24K = 100% pure
+            22: 0.9167,   // 22K = 91.67% pure
+            21: 0.875,    // 21K = 87.5% pure
+            18: 0.75      // 18K = 75% pure
+        };
 
         // Exchange rate USD to NPR (approximate)
         this.usdToNpr = 132.50;
@@ -37,6 +52,19 @@ class SilverPriceTracker {
     }
 
     setupEventListeners() {
+        // Metal toggle buttons
+        document.getElementById('goldBtn').addEventListener('click', () => this.switchMetal('gold'));
+        document.getElementById('silverBtn').addEventListener('click', () => this.switchMetal('silver'));
+
+        // Purity buttons (gold only)
+        document.querySelectorAll('.purity-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const purity = parseInt(e.currentTarget.dataset.purity);
+                this.setPurity(purity);
+            });
+        });
+
+        // Calculator and updates
         document.getElementById('calculateBtn').addEventListener('click', () => this.calculatePrice());
         document.getElementById('refreshBtn').addEventListener('click', () => this.refreshPrices());
         document.getElementById('updatePriceBtn').addEventListener('click', () => this.manualPriceUpdate());
@@ -53,30 +81,72 @@ class SilverPriceTracker {
         document.getElementById('unitSelect').addEventListener('change', () => this.calculatePrice());
     }
 
-    // Fetch live silver prices (simulated - in production, use real API)
-    async fetchLivePrice() {
+    switchMetal(metal) {
+        this.currentMetal = metal;
+
+        // Update toggle button states
+        document.querySelectorAll('.toggle-btn').forEach(btn => btn.classList.remove('active'));
+        if (metal === 'gold') {
+            document.getElementById('goldBtn').classList.add('active');
+            document.getElementById('puritySection').style.display = 'block';
+        } else {
+            document.getElementById('silverBtn').classList.add('active');
+            document.getElementById('puritySection').style.display = 'none';
+        }
+
+        // Update labels
+        const metalDisplayName = metal === 'gold' ? 'Gold' : 'Silver';
+        document.getElementById('metalName').textContent = metalDisplayName;
+        document.getElementById('calculatorMetalName').textContent = metalDisplayName;
+
+        // Refresh prices and recalculate
+        this.updatePrices();
+        this.calculatePrice();
+    }
+
+    setPurity(purity) {
+        this.currentPurity = purity;
+
+        // Update purity button states
+        document.querySelectorAll('.purity-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelector(`[data-purity="${purity}"]`).classList.add('active');
+
+        // Refresh prices and recalculate
+        this.updatePrices();
+        this.calculatePrice();
+    }
+
+    // Fetch live metal prices (simulated - in production, use real API)
+    async fetchLivePrice(metal) {
         // In production, you would fetch from a real API like:
-        // - https://api.metals.live/v1/spot/silver
+        // - https://api.metals.live/v1/spot/gold or /silver
         // - https://www.goldapi.io/
         // - Or a Nepal-specific gold/silver price API
         
         // For demo, we'll simulate price fluctuation
-        const fluctuation = (Math.random() - 0.5) * 5; // Random change between -2.5 and +2.5 NPR
-        this.basePricePerGram = Math.max(100, this.basePricePerGram + fluctuation);
+        const fluctuationRange = metal === 'gold' ? 50 : 5;
+        const fluctuation = (Math.random() - 0.5) * fluctuationRange;
+        this.prices[metal] = Math.max(metal === 'gold' ? 10000 : 100, this.prices[metal] + fluctuation);
         
-        return this.basePricePerGram;
+        return this.prices[metal];
     }
 
     async updatePrices() {
         try {
-            const pricePerGram = await this.fetchLivePrice();
+            const basePricePerGram = await this.fetchLivePrice(this.currentMetal);
+            
+            // Apply purity factor for gold
+            let effectivePricePerGram = basePricePerGram;
+            if (this.currentMetal === 'gold') {
+                effectivePricePerGram = basePricePerGram * this.purityFactors[this.currentPurity];
+            }
             
             // Calculate prices for different units
             const prices = {
-                gram: pricePerGram,
-                tola: pricePerGram * this.conversions.tola,
-                ounce: pricePerGram * this.conversions.ounce,
-                kilogram: pricePerGram * this.conversions.kilogram
+                gram: effectivePricePerGram,
+                tola: effectivePricePerGram * this.conversions.tola,
+                ounce: effectivePricePerGram * this.conversions.ounce,
+                kilogram: effectivePricePerGram * this.conversions.kilogram
             };
 
             // Update UI
@@ -125,17 +195,31 @@ class SilverPriceTracker {
         // Convert to grams
         const weightInGrams = weight * this.conversions[unit];
 
+        // Get current effective price
+        let effectivePrice = this.prices[this.currentMetal];
+        if (this.currentMetal === 'gold') {
+            effectivePrice = effectivePrice * this.purityFactors[this.currentPurity];
+        }
+
         // Calculate total price
-        const totalPrice = weightInGrams * this.basePricePerGram;
+        const totalPrice = weightInGrams * effectivePrice;
 
         // Display result
         resultValue.textContent = `NPR ${totalPrice.toFixed(2)}`;
         
         // Create breakdown
-        const breakdown = `
+        let breakdown = `
+            <div><strong>Metal:</strong> ${this.currentMetal === 'gold' ? 'Gold' : 'Silver'}</div>
+        `;
+        
+        if (this.currentMetal === 'gold') {
+            breakdown += `<div><strong>Purity:</strong> ${this.currentPurity}K (${(this.purityFactors[this.currentPurity] * 100).toFixed(2)}%)</div>`;
+        }
+        
+        breakdown += `
             <div><strong>Weight:</strong> ${weight} ${this.getUnitName(unit)}</div>
             <div><strong>Equivalent:</strong> ${weightInGrams.toFixed(3)} grams</div>
-            <div><strong>Rate:</strong> NPR ${this.basePricePerGram.toFixed(2)} per gram</div>
+            <div><strong>Rate:</strong> NPR ${effectivePrice.toFixed(2)} per gram</div>
         `;
         resultBreakdown.innerHTML = breakdown;
 
@@ -171,16 +255,17 @@ class SilverPriceTracker {
 
     manualPriceUpdate() {
         const manualPrice = parseFloat(document.getElementById('manualPriceInput').value);
+        const selectedMetal = document.getElementById('metalSelect').value;
         
         if (!manualPrice || manualPrice <= 0) {
             alert('Please enter a valid price');
             return;
         }
 
-        this.basePricePerGram = manualPrice;
+        this.prices[selectedMetal] = manualPrice;
         this.updatePrices();
         document.getElementById('manualPriceInput').value = '';
-        alert('Price updated successfully!');
+        alert(`${selectedMetal === 'gold' ? 'Gold' : 'Silver'} price updated successfully!`);
     }
 
     startPriceUpdates() {
@@ -263,5 +348,5 @@ class SilverPriceTracker {
 
 // Initialize the application when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new SilverPriceTracker();
+    new MetalPriceTracker();
 });

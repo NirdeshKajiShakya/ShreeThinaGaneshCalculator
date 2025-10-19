@@ -1,11 +1,13 @@
-# ShreeThinaGaneshCalculator 🪙
+# ShreeThinaGaneshCalculator 🪙✨
 
-A comprehensive live silver price tracking application for Nepal with multi-metric support.
+A comprehensive live gold and silver price tracking application for Nepal with multi-metric support.
 
 ## Features
 
-- 📊 **Live Price Tracking**: Real-time silver price updates across multiple metrics
-- 🧮 **Smart Calculator**: Calculate total silver cost for any weight in various units
+- 🪙 **Dual Metal Support**: Track both Gold (सुन) and Silver (चाँदी) prices
+- 💎 **Gold Purity Options**: 24K, 22K, 21K, and 18K gold calculations
+- 📊 **Live Price Tracking**: Real-time price updates across multiple metrics
+- 🧮 **Smart Calculator**: Calculate total cost for any weight in various units
 - 📈 **Price History Chart**: Visual representation of price changes throughout the day
 - 🌍 **Nepal-Specific Units**: Support for traditional Nepali units (Tola, Ana, Lal, Ratti)
 - 💱 **Multiple Metrics**: Gram, Kilogram, Ounce, Pound, and more
@@ -24,13 +26,22 @@ A comprehensive live silver price tracking application for Nepal with multi-metr
 
 ## How to Use
 
-1. **View Current Prices**: See live silver prices per gram, tola, ounce, and kilogram
-2. **Calculate Total Cost**: 
-   - Enter the weight of silver
+1. **Select Metal**: Choose between Gold or Silver using the toggle buttons
+2. **Choose Purity** (Gold only): Select from 24K, 22K, 21K, or 18K
+3. **View Current Prices**: See live prices per gram, tola, ounce, and kilogram
+4. **Calculate Total Cost**: 
+   - Enter the weight
    - Select your preferred unit
-   - Click "Calculate Price" to see the total cost
-3. **Track Price Changes**: Monitor the price history chart for daily trends
-4. **Manual Update** (Admin): Update base prices manually for testing
+   - Click "Calculate Price" to see the total cost with breakdown
+5. **Track Price Changes**: Monitor the price history chart for daily trends
+6. **Manual Update** (Admin): Update base prices manually for testing
+
+## Gold Purity Guide
+
+- **24K (Fine Gold)**: 100% pure gold - highest value
+- **22K (Hallmark)**: 91.67% pure - most common for jewelry in Nepal
+- **21K**: 87.5% pure - traditional choice
+- **18K**: 75% pure - durable for daily wear jewelry
 
 ## Getting Started
 
