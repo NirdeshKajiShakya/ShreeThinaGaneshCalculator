@@ -53,32 +53,70 @@ class MetalPriceTracker {
 
     setupEventListeners() {
         // Metal toggle buttons
-        document.getElementById('goldBtn').addEventListener('click', () => this.switchMetal('gold'));
-        document.getElementById('silverBtn').addEventListener('click', () => this.switchMetal('silver'));
+        document.getElementById('goldBtn').addEventListener('click', () => {
+            this.vibrate(10);
+            this.switchMetal('gold');
+        });
+        document.getElementById('silverBtn').addEventListener('click', () => {
+            this.vibrate(10);
+            this.switchMetal('silver');
+        });
 
         // Purity buttons (gold only)
         document.querySelectorAll('.purity-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
+                this.vibrate(10);
                 const purity = parseInt(e.currentTarget.dataset.purity);
                 this.setPurity(purity);
             });
         });
 
         // Calculator and updates
-        document.getElementById('calculateBtn').addEventListener('click', () => this.calculatePrice());
-        document.getElementById('refreshBtn').addEventListener('click', () => this.refreshPrices());
-        document.getElementById('updatePriceBtn').addEventListener('click', () => this.manualPriceUpdate());
+        document.getElementById('calculateBtn').addEventListener('click', () => {
+            this.vibrate(20);
+            this.calculatePrice();
+        });
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+            this.vibrate(15);
+            this.refreshPrices();
+        });
+        document.getElementById('updatePriceBtn').addEventListener('click', () => {
+            this.vibrate(15);
+            this.manualPriceUpdate();
+        });
         
         // Allow Enter key to calculate
         document.getElementById('weightInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
+                this.vibrate(20);
                 this.calculatePrice();
+                // Blur input to hide mobile keyboard
+                e.target.blur();
             }
         });
 
         // Real-time calculation on input change
         document.getElementById('weightInput').addEventListener('input', () => this.calculatePrice());
-        document.getElementById('unitSelect').addEventListener('change', () => this.calculatePrice());
+        document.getElementById('unitSelect').addEventListener('change', () => {
+            this.vibrate(10);
+            this.calculatePrice();
+        });
+
+        // Handle orientation change
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                if (this.chart) {
+                    this.chart.resize();
+                }
+            }, 100);
+        });
+    }
+
+    // Vibration feedback for mobile devices
+    vibrate(duration = 10) {
+        if ('vibrate' in navigator) {
+            navigator.vibrate(duration);
+        }
     }
 
     switchMetal(metal) {
@@ -295,14 +333,31 @@ class MetalPriceTracker {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
                 plugins: {
                     legend: {
                         display: true,
-                        position: 'top'
+                        position: 'top',
+                        labels: {
+                            padding: window.innerWidth < 640 ? 8 : 10,
+                            font: {
+                                size: window.innerWidth < 640 ? 11 : 12
+                            }
+                        }
                     },
                     tooltip: {
                         mode: 'index',
                         intersect: false,
+                        padding: window.innerWidth < 640 ? 8 : 12,
+                        titleFont: {
+                            size: window.innerWidth < 640 ? 12 : 14
+                        },
+                        bodyFont: {
+                            size: window.innerWidth < 640 ? 11 : 13
+                        }
                     }
                 },
                 scales: {
@@ -311,14 +366,27 @@ class MetalPriceTracker {
                         ticks: {
                             callback: function(value) {
                                 return 'NPR ' + value.toFixed(2);
+                            },
+                            font: {
+                                size: window.innerWidth < 640 ? 10 : 12
                             }
                         }
                     },
                     x: {
                         display: true,
                         title: {
-                            display: true,
-                            text: 'Time'
+                            display: window.innerWidth >= 640,
+                            text: 'Time',
+                            font: {
+                                size: window.innerWidth < 640 ? 11 : 12
+                            }
+                        },
+                        ticks: {
+                            font: {
+                                size: window.innerWidth < 640 ? 9 : 11
+                            },
+                            maxRotation: window.innerWidth < 640 ? 45 : 0,
+                            minRotation: window.innerWidth < 640 ? 45 : 0
                         }
                     }
                 }
