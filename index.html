@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nepal Silver Price Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🪙 Nepal Silver Price Tracker</h1>
+            <p class="subtitle">Real-time silver price tracking and calculator</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Current Price Display -->
+            <section class="price-display">
+                <h2>Current Silver Price</h2>
+                <div class="price-card">
+                    <div class="price-item">
+                        <span class="label">Per Gram:</span>
+                        <span class="price" id="pricePerGram">NPR 0.00</span>
+                    </div>
+                    <div class="price-item">
+                        <span class="label">Per Tola:</span>
+                        <span class="price" id="pricePerTola">NPR 0.00</span>
+                    </div>
+                    <div class="price-item">
+                        <span class="label">Per Ounce:</span>
+                        <span class="price" id="pricePerOunce">NPR 0.00</span>
+                    </div>
+                    <div class="price-item">
+                        <span class="label">Per Kilogram:</span>
+                        <span class="price" id="pricePerKg">NPR 0.00</span>
+                    </div>
+                </div>
+                <div class="last-updated">
+                    Last updated: <span id="lastUpdated">Never</span>
+                </div>
+                <button id="refreshBtn" class="btn-primary">🔄 Refresh Prices</button>
+            </section>
+
+            <!-- Calculator Section -->
+            <section class="calculator">
+                <h2>Silver Price Calculator</h2>
+                <div class="calculator-card">
+                    <div class="input-group">
+                        <label for="weightInput">Enter Weight:</label>
+                        <input type="number" id="weightInput" placeholder="0" step="0.01" min="0">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="unitSelect">Select Unit:</label>
+                        <select id="unitSelect">
+                            <option value="gram">Gram (g)</option>
+                            <option value="tola" selected>Tola (त)</option>
+                            <option value="ounce">Ounce (oz)</option>
+                            <option value="kilogram">Kilogram (kg)</option>
+                            <option value="pound">Pound (lb)</option>
+                            <option value="ana">Ana (आना)</option>
+                            <option value="lal">Lal (लाल)</option>
+                            <option value="ratti">Ratti (रत्ती)</option>
+                        </select>
+                    </div>
+
+                    <button id="calculateBtn" class="btn-calculate">Calculate Price</button>
+
+                    <div class="result" id="result">
+                        <div class="result-header">Total Price</div>
+                        <div class="result-value" id="resultValue">NPR 0.00</div>
+                        <div class="result-breakdown" id="resultBreakdown"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Price History Chart -->
+            <section class="price-history">
+                <h2>Price History (Today)</h2>
+                <div class="chart-container">
+                    <canvas id="priceChart"></canvas>
+                </div>
+            </section>
+
+            <!-- Manual Price Update (for demo purposes) -->
+            <section class="manual-update">
+                <h2>⚙️ Manual Price Update (Admin)</h2>
+                <div class="manual-update-card">
+                    <div class="input-group">
+                        <label for="manualPriceInput">Base Price (NPR per gram):</label>
+                        <input type="number" id="manualPriceInput" placeholder="Enter price" step="0.01" min="0">
+                    </div>
+                    <button id="updatePriceBtn" class="btn-secondary">Update Base Price</button>
+                    <p class="info-text">💡 Note: In production, prices would be fetched from a live API</p>
+                </div>
+            </section>
+        </div>
+
+        <footer>
+            <p>© 2025 Shree Thina Ganesh Calculator | Silver Price Tracker</p>
+            <p class="disclaimer">Prices are for reference only. Please verify with local dealers.</p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
