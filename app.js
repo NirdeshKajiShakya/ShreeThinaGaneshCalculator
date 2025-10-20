@@ -137,6 +137,9 @@ class MetalPriceTracker {
         document.getElementById('metalName').textContent = metalDisplayName;
         document.getElementById('calculatorMetalName').textContent = metalDisplayName;
 
+        // Update chart for new metal
+        this.updateChartForMetal();
+
         // Refresh prices and recalculate
         this.updatePrices();
         this.calculatePrice();
@@ -340,15 +343,24 @@ class MetalPriceTracker {
     initChart() {
         const ctx = document.getElementById('priceChart').getContext('2d');
         
+        // Chart colors based on metal type
+        const chartConfig = this.getChartConfig();
+        
         this.chart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: this.timeLabels,
                 datasets: [{
-                    label: 'Price per Gram (NPR)',
+                    label: `${chartConfig.metalLabel} Price per Gram (NPR)`,
                     data: this.priceHistory,
-                    borderColor: 'rgb(75, 192, 192)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: chartConfig.borderColor,
+                    backgroundColor: chartConfig.backgroundColor,
+                    borderWidth: 3,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    pointBackgroundColor: chartConfig.pointColor,
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
                     tension: 0.4,
                     fill: true
                 }]
@@ -367,8 +379,10 @@ class MetalPriceTracker {
                         labels: {
                             padding: window.innerWidth < 640 ? 8 : 10,
                             font: {
-                                size: window.innerWidth < 640 ? 11 : 12
-                            }
+                                size: window.innerWidth < 640 ? 11 : 12,
+                                weight: 'bold'
+                            },
+                            color: chartConfig.textColor
                         }
                     },
                     tooltip: {
@@ -376,45 +390,92 @@ class MetalPriceTracker {
                         intersect: false,
                         padding: window.innerWidth < 640 ? 8 : 12,
                         titleFont: {
-                            size: window.innerWidth < 640 ? 12 : 14
+                            size: window.innerWidth < 640 ? 12 : 14,
+                            weight: 'bold'
                         },
                         bodyFont: {
                             size: window.innerWidth < 640 ? 11 : 13
-                        }
+                        },
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        borderColor: chartConfig.borderColor,
+                        borderWidth: 2
                     }
                 },
                 scales: {
                     y: {
                         beginAtZero: false,
+                        grid: {
+                            color: chartConfig.gridColor
+                        },
                         ticks: {
                             callback: function(value) {
                                 return 'NPR ' + value.toFixed(2);
                             },
                             font: {
                                 size: window.innerWidth < 640 ? 10 : 12
-                            }
+                            },
+                            color: chartConfig.textColor
                         }
                     },
                     x: {
                         display: true,
+                        grid: {
+                            color: chartConfig.gridColor
+                        },
                         title: {
                             display: window.innerWidth >= 640,
                             text: 'Time',
                             font: {
-                                size: window.innerWidth < 640 ? 11 : 12
-                            }
+                                size: window.innerWidth < 640 ? 11 : 12,
+                                weight: 'bold'
+                            },
+                            color: chartConfig.textColor
                         },
                         ticks: {
                             font: {
                                 size: window.innerWidth < 640 ? 9 : 11
                             },
                             maxRotation: window.innerWidth < 640 ? 45 : 0,
-                            minRotation: window.innerWidth < 640 ? 45 : 0
+                            minRotation: window.innerWidth < 640 ? 45 : 0,
+                            color: chartConfig.textColor
                         }
                     }
                 }
             }
         });
+    }
+
+    // Get chart colors based on current metal
+    getChartConfig() {
+        if (this.currentMetal === 'gold') {
+            return {
+                metalLabel: '✨ Gold',
+                borderColor: '#FFD700',      // Bright gold
+                backgroundColor: 'rgba(255, 215, 0, 0.25)',
+                pointColor: '#FFA500',       // Orange
+                textColor: '#2c3e50',
+                gridColor: 'rgba(255, 215, 0, 0.1)'
+            };
+        } else {
+            return {
+                metalLabel: '🪙 Silver',
+                borderColor: '#87CEEB',      // Sky blue
+                backgroundColor: 'rgba(192, 192, 192, 0.2)',
+                pointColor: '#4A90E2',       // Bright blue
+                textColor: '#2c3e50',
+                gridColor: 'rgba(192, 192, 192, 0.1)'
+            };
+        }
+    }
+
+    // Recreate chart when switching metals
+    updateChartForMetal() {
+        if (this.chart) {
+            this.chart.destroy();
+        }
+        this.priceHistory = [];
+        this.timeLabels = [];
+        this.initChart();
     }
 
     updateChart(price) {
