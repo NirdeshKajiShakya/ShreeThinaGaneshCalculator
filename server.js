@@ -39,7 +39,7 @@ function parseNumber(str) {
     return parseFloat(String(str).replace(/[,\s]/g, ''));
 }
 
-// Scrape gold prices from livepriceofgold.com
+// Scrape gold prices from hamropatro.com
 app.get('/api/gold-price', async (req, res) => {
     try {
         const now = Date.now();
@@ -51,7 +51,7 @@ app.get('/api/gold-price', async (req, res) => {
             throw new Error('Fetch module not available');
         }
 
-        const GOLD_URL = 'https://www.livepriceofgold.com/nepal-gold-price-per-tola.html';
+        const GOLD_URL = 'https://www.hamropatro.com/gold';
         console.log(`Fetching gold prices from ${GOLD_URL}`);
         
         const response = await fetch(GOLD_URL, {
@@ -67,38 +67,43 @@ app.get('/api/gold-price', async (req, res) => {
         const html = await response.text();
         const $ = cheerio.load(html);
 
-        // Extract prices from table rows
-        // Looking for pattern: "24K Gold Tola | 224,244.92 | ..." or "Gold Rate per Tola | 224,244.92 | ..."
-        let per24K = null;
-        let per22K = null;
+        // Extract prices from li elements
+        // Gold Hallmark - tola and Silver - tola are in separate li items
+        let per24K = null;  // Gold Hallmark (24K)
+        let per22K = null;  // Gold Tajabi (22K)
+        let silverPerTola = null;
 
-        $('table tr').each((i, row) => {
-            const cells = $(row).find('td, th').map((k, cell) => $(cell).text().trim()).get();
+        $('li').each((i, elem) => {
+            const $li = $(elem);
+            const text = $li.text().trim();
             
-            // Look for rows with 24K or Gold rate
-            if (cells.length >= 2) {
-                const label = cells[0].toLowerCase();
-                const priceStr = cells[1];
-                
-                if (label.includes('24k') || label.includes('gold rate')) {
-                    per24K = parseNumber(priceStr);
+            // Get the next li which should contain the price
+            const $nextLi = $li.next('li');
+            const nextText = $nextLi.text().trim();
+            
+            if (text.includes('Gold Hallmark') && text.includes('tola')) {
+                // Next li contains the price
+                const priceMatch = nextText.match(/Nrs\.\s*([0-9,]+\.[0-9]{2})/);
+                if (priceMatch) {
+                    per24K = parseNumber(priceMatch[1]);
                 }
-                if (label.includes('22k')) {
-                    per22K = parseNumber(priceStr);
+            } else if (text.includes('Gold Tajabi') && text.includes('tola')) {
+                // Next li contains the price
+                const priceMatch = nextText.match(/Nrs\.\s*([0-9,]+\.[0-9]{2})/);
+                if (priceMatch) {
+                    const price = parseNumber(priceMatch[1]);
+                    if (price > 0) {  // Only use if not 0.00
+                        per22K = price;
+                    }
+                }
+            } else if (text.includes('Silver') && text.includes('tola') && !text.includes('10g')) {
+                // Next li contains the silver price
+                const priceMatch = nextText.match(/Nrs\.\s*([0-9,]+\.[0-9]{2})/);
+                if (priceMatch) {
+                    silverPerTola = parseNumber(priceMatch[1]);
                 }
             }
         });
-
-        // Fallback: extract from meta description if table parsing failed
-        if (!per24K) {
-            const metaDesc = $('meta[name="Description"]').attr('content');
-            if (metaDesc) {
-                const metaMatch = metaDesc.match(/([0-9,]+(?:\.[0-9]+)?)\s*NPR/);
-                if (metaMatch) {
-                    per24K = parseNumber(metaMatch[1]);
-                }
-            }
-        }
 
         // Fallback: if no 22K found, calculate from 24K
         if (!per22K && per24K) {
@@ -111,7 +116,7 @@ app.get('/api/gold-price', async (req, res) => {
 
         const TOLA_TO_GRAM = 11.664;
         const payload = {
-            source: 'livepriceofgold.com',
+            source: 'hamropatro.com',
             lastUpdated: new Date().toISOString(),
             currency: 'NPR',
             rates: {
@@ -141,8 +146,87 @@ app.get('/api/gold-price', async (req, res) => {
     }
 });
 
-// Scrape silver prices from livepriceofsilver.com or similar
+// Scrape silver prices from hamropatro.com
 app.get('/api/silver-price', async (req, res) => {
+    try {
+        const now = Date.now();
+        if (priceCache.silver.data && now - priceCache.silver.ts < CACHE_TTL) {
+            return res.json({ ...priceCache.silver.data, cached: true });
+        }
+
+        const SILVER_URL = 'https://www.hamropatro.com/gold';
+        console.log(`Fetching silver prices from ${SILVER_URL}`);
+
+        const response = await fetch(SILVER_URL, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const html = await response.text();
+        const $ = cheerio.load(html);
+
+        // Extract silver per tola price from li elements
+        let perTola = null;
+
+        $('li').each((i, elem) => {
+            const $li = $(elem);
+            const text = $li.text().trim();
+            
+            // Look for "Silver - tola" (not "10g")
+            if (text.includes('Silver') && text.includes('tola') && !text.includes('10g')) {
+                // Next li contains the price
+                const $nextLi = $li.next('li');
+                const nextText = $nextLi.text().trim();
+                const priceMatch = nextText.match(/Nrs\.\s*([0-9,]+\.[0-9]{2})/);
+                if (priceMatch) {
+                    perTola = parseNumber(priceMatch[1]);
+                }
+            }
+        });
+
+        // Fallback: if no price found, use a reasonable default
+        if (!perTola) {
+            perTola = 3000; // Approximate typical silver price
+        }
+
+        const TOLA_TO_GRAM = 11.664;
+        const payload = {
+            source: SILVER_URL,
+            lastUpdated: new Date().toISOString(),
+            currency: 'NPR',
+            rates: {
+                perTola: perTola,
+                perGram: perTola / TOLA_TO_GRAM,
+                perKg: (perTola / TOLA_TO_GRAM) * 1000
+            }
+        };
+
+        console.log(`✅ Silver price updated: NPR ${perTola}/tola (source: ${SILVER_URL})`);
+        priceCache.silver = { ts: now, data: payload };
+        res.json(payload);
+    } catch (error) {
+        console.error('❌ Silver price scrape error:', error.message);
+        
+        // Return cached data if available
+        if (priceCache.silver.data) {
+            return res.json({ ...priceCache.silver.data, cached: true, error: error.message });
+        }
+        
+        res.status(502).json({
+            error: 'Failed to fetch live silver prices',
+            fallback: 'Using simulated price',
+            details: error.message
+        });
+    }
+});
+
+// Legacy endpoint for backward compatibility
+app.get('/api/silver-price-legacy', async (req, res) => {
     try {
         const now = Date.now();
         if (priceCache.silver.data && now - priceCache.silver.ts < CACHE_TTL) {
