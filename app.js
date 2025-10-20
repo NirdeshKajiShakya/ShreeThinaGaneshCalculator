@@ -154,19 +154,42 @@ class MetalPriceTracker {
         this.calculatePrice();
     }
 
-    // Fetch live metal prices (simulated - in production, use real API)
+    // Fetch live metal prices from server API
     async fetchLivePrice(metal) {
-        // In production, you would fetch from a real API like:
-        // - https://api.metals.live/v1/spot/gold or /silver
-        // - https://www.goldapi.io/
-        // - Or a Nepal-specific gold/silver price API
-        
-        // For demo, we'll simulate price fluctuation
-        const fluctuationRange = metal === 'gold' ? 50 : 5;
-        const fluctuation = (Math.random() - 0.5) * fluctuationRange;
-        this.prices[metal] = Math.max(metal === 'gold' ? 10000 : 100, this.prices[metal] + fluctuation);
-        
-        return this.prices[metal];
+        try {
+            const endpoint = metal === 'gold' ? '/api/gold-price' : '/api/silver-price';
+            const response = await fetch(endpoint, {
+                cache: 'no-store'
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            if (metal === 'gold' && data.rates) {
+                // Get the appropriate purity rate
+                const purityKey = String(this.currentPurity);
+                const rateObj = data.rates[purityKey] || data.rates['24'];
+                
+                if (rateObj?.perGram) {
+                    this.prices.gold = rateObj.perGram;
+                    console.log(`Updated gold (${purityKey}K): NPR ${rateObj.perGram.toFixed(2)}/gram`);
+                    return rateObj.perGram;
+                }
+            } else if (metal === 'silver' && data.rates?.perGram) {
+                this.prices.silver = data.rates.perGram;
+                console.log(`Updated silver: NPR ${data.rates.perGram.toFixed(2)}/gram`);
+                return data.rates.perGram;
+            }
+
+            throw new Error('Invalid price data format');
+        } catch (error) {
+            console.error(`Failed to fetch ${metal} price:`, error.message);
+            // Return last known price (fallback)
+            return this.prices[metal];
+        }
     }
 
     async updatePrices() {
