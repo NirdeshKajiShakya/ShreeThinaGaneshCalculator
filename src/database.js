@@ -1,13 +1,17 @@
 require('dotenv').config();
-const { Pool } = require('pg');
 
 // Determine if we're using PostgreSQL (production) or SQLite (development)
-const usePostgres = process.env.DATABASE_URL || process.env.NODE_ENV === 'production';
+// Only use PostgreSQL if DATABASE_URL is explicitly set
+const usePostgres = !!process.env.DATABASE_URL;
 
 let db;
 
 if (usePostgres) {
     // PostgreSQL setup for production/deployment
+    const { Pool } = require('pg');
+    
+    console.log('🔌 Connecting to PostgreSQL database...');
+    
     const pool = new Pool({
         connectionString: process.env.DATABASE_URL,
         ssl: process.env.NODE_ENV === 'production' ? {
@@ -18,6 +22,10 @@ if (usePostgres) {
     // Initialize PostgreSQL tables
     const initPostgres = async () => {
         try {
+            // Test connection first
+            await pool.query('SELECT NOW()');
+            console.log('✅ PostgreSQL connection successful');
+            
             await pool.query(`
                 CREATE TABLE IF NOT EXISTS jewelry (
                     id SERIAL PRIMARY KEY,
@@ -39,7 +47,9 @@ if (usePostgres) {
 
             console.log('✅ PostgreSQL database initialized');
         } catch (error) {
-            console.error('❌ Error initializing PostgreSQL:', error);
+            console.error('❌ Error initializing PostgreSQL:', error.message);
+            console.error('💡 Make sure DATABASE_URL is set correctly in your environment variables');
+            throw error;
         }
     };
 

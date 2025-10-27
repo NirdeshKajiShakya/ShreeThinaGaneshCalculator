@@ -22,24 +22,37 @@ This application is now ready to deploy to cloud platforms! It supports both Pos
    - Go to [Render Dashboard](https://dashboard.render.com)
    - Click "New +" → "PostgreSQL"
    - Name: `jewelry-calculator-db`
-   - Copy the "Internal Database URL"
+   - Region: Choose closest to your users
+   - **IMPORTANT**: Copy the "Internal Database URL" (not External!)
+   - Wait for database to be fully created (status: Available)
 
 2. **Deploy Web Service**:
    - Click "New +" → "Web Service"
    - Connect your GitHub repository
    - Settings:
-     - **Name**: `jewelry-calculator`
+     - **Name**: `jewelry-calculator` (or your preferred name)
+     - **Region**: Same as database
+     - **Branch**: `main`
+     - **Root Directory**: Leave empty
      - **Environment**: `Node`
      - **Build Command**: `npm install`
      - **Start Command**: `npm start`
-     - **Environment Variables**:
+     - **Environment Variables** (Click "Add Environment Variable"):
        ```
        NODE_ENV=production
-       DATABASE_URL=[paste your PostgreSQL URL]
-       CLOUDINARY_URL=[paste your Cloudinary URL]
+       DATABASE_URL=[paste Internal Database URL from step 1]
+       CLOUDINARY_URL=[optional: paste your Cloudinary URL]
        ```
+       
+       **Critical**: Make sure to use the **Internal Database URL**, not the External one!
 
 3. **Deploy**: Click "Create Web Service"
+4. **Verify**: Check logs to ensure "✅ PostgreSQL connection successful" appears
+
+**Troubleshooting Render:**
+- If you see "ECONNREFUSED": DATABASE_URL is not set or incorrect
+- Use **Internal Database URL** format: `postgresql://user:pass@dpg-xxxxx/dbname`
+- Both web service and database must be in the same region
 
 ### Option 2: Railway (Free Tier Available)
 
