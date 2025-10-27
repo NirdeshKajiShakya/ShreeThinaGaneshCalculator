@@ -1,19 +1,77 @@
 # ShreeThinaGaneshCalculator 🪙✨
 
-A comprehensive live gold and silver price tracking application for Nepal with multi-metric support.
+A comprehensive live gold and silver price tracking application for Nepal with jewelry inventory management and multi-metric support.
 
-## Features
+## ✨ Features
 
 - 🪙 **Dual Metal Support**: Track both Gold (सुन) and Silver (चाँदी) prices
 - 💎 **Gold Purity Options**: 24K, 22K, 21K, and 18K gold calculations
-- 📊 **Live Price Tracking**: Real-time price updates across multiple metrics
-- 🧮 **Smart Calculator**: Calculate total cost for any weight in various units
-- 📈 **Price History Chart**: Visual representation of price changes throughout the day
+- 📊 **Live Price Tracking**: Real-time price updates from hamropatro.com
+- 🧮 **Smart Calculator**: Calculate jewelry costs with working cost support
+- 💍 **Jewelry Inventory**: Store and manage your jewelry items with images
+- 📈 **Price History Chart**: Visual representation of price changes
 - 🌍 **Nepal-Specific Units**: Support for traditional Nepali units (Tola, Ana, Lal, Ratti)
 - 💱 **Multiple Metrics**: Gram, Kilogram, Ounce, Pound, and more
 - 🎨 **Beautiful UI**: Modern, responsive design that works on all devices
+- ☁️ **Cloud-Ready**: Deploy to Render, Railway, Heroku, or any Node.js host
 
-## Supported Units
+## 🚀 Quick Start
+
+### Local Development
+
+```bash
+# Clone the repository
+git clone https://github.com/NirdeshKajiShakya/ShreeThinaGaneshCalculator.git
+cd ShreeThinaGaneshCalculator
+
+# Install dependencies
+npm install
+
+# Start the server
+npm start
+
+# Open browser to http://localhost:3000
+```
+
+### Production Deployment
+
+See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for detailed instructions on deploying to:
+- Render (Recommended)
+- Railway
+- Heroku
+- Any Node.js hosting platform
+
+## 💾 Database & Storage
+
+**Local Development:**
+- Uses SQLite database (automatic, no setup needed)
+- Images stored in `public/uploads/` folder
+
+**Production:**
+- Uses PostgreSQL database (via `DATABASE_URL` environment variable)
+- Images stored on Cloudinary CDN (via `CLOUDINARY_URL` environment variable)
+
+The app automatically detects the environment and uses the appropriate storage!
+
+## 🔧 Environment Variables
+
+Create a `.env` file for local development (already provided):
+
+```env
+NODE_ENV=development
+PORT=3000
+# DATABASE_URL=  # Leave empty for SQLite
+# CLOUDINARY_URL=  # Leave empty for local storage
+```
+
+For production, set:
+```env
+NODE_ENV=production
+DATABASE_URL=postgresql://user:pass@host:5432/database
+CLOUDINARY_URL=cloudinary://api_key:api_secret@cloud_name
+```
+
+## 📱 Supported Units
 
 - **Gram (g)** - International standard
 - **Tola (त)** - Traditional Nepali unit (11.664g)
@@ -24,17 +82,30 @@ A comprehensive live gold and silver price tracking application for Nepal with m
 - **Lal (लाल)** - 1/200 Tola (0.0583g)
 - **Ratti (रत्ती)** - Traditional unit (0.1215g)
 
-## How to Use
+## 🎯 How to Use
 
 1. **Select Metal**: Choose between Gold or Silver using the toggle buttons
 2. **Choose Purity** (Gold only): Select from 24K, 22K, 21K, or 18K
 3. **View Current Prices**: See live prices per gram, tola, ounce, and kilogram
-4. **Calculate Total Cost**: 
+4. **Calculate Jewelry Cost**: 
    - Enter the weight
    - Select your preferred unit
-   - Click "Calculate Price" to see the total cost with breakdown
-5. **Track Price Changes**: Monitor the price history chart for daily trends
-6. **Manual Update** (Admin): Update base prices manually for testing
+   - Add working cost (making charges)
+   - Click "Calculate Price" to see the total breakdown
+5. **Manage Inventory**:
+   - Add jewelry items with photos, weight, and working cost
+   - View real-time prices for all your items
+   - Edit or delete items as needed
+   - Prices update automatically every 30 seconds
+6. **Track Price Changes**: Monitor the price history chart for daily trends
+
+## 💍 Jewelry Inventory
+
+- ➕ **Add Items**: Store jewelry with name, image, weight, metal type, purity, and working cost
+- 📸 **Photo Upload**: Attach images to your jewelry items
+- 💰 **Live Pricing**: See current value based on live market rates
+- 🔄 **Auto-Update**: Prices refresh every 30 seconds automatically
+- ✏️ **Edit/Delete**: Full CRUD operations for managing your collection
 
 ## Gold Purity Guide
 
@@ -49,33 +120,56 @@ A comprehensive live gold and silver price tracking application for Nepal with m
 2. No installation or server required - runs directly in the browser
 3. For production use, integrate with a live silver price API
 
-## Technical Details
+## 🛠️ Technical Stack
 
-- **Frontend**: HTML5, CSS3, JavaScript (ES6+)
-- **Charts**: Chart.js library for visualization
-- **Responsive**: Mobile-friendly design
-- **Updates**: Automatic price refresh every 30 seconds
+- **Backend**: Node.js, Express.js
+- **Database**: PostgreSQL (production) / SQLite (development)
+- **Image Storage**: Cloudinary (production) / Local filesystem (development)
+- **Frontend**: HTML5, CSS3, Vanilla JavaScript (ES6+)
+- **Charts**: Chart.js for visualization
+- **Price Source**: Web scraping from hamropatro.com
+- **Deployment**: Cloud-ready for Render, Railway, Heroku
 
-## Future Enhancements
+## 📦 Dependencies
 
-- Integration with real silver price APIs
-- Historical data storage and analysis
-- Price alerts and notifications
-- Multi-language support (Nepali, English)
-- Backend server for data persistence
-- User authentication for personalized tracking
+```json
+{
+  "express": "^4.18.2",
+  "pg": "^8.11.3",
+  "sqlite3": "^5.1.6",
+  "cloudinary": "^1.41.0",
+  "multer": "^1.4.5-lts.1",
+  "cheerio": "^1.1.2",
+  "dotenv": "^16.3.1"
+}
+```
 
-## API Integration Note
+## 🔮 Future Enhancements
 
-For production deployment, replace the simulated price fetching with actual API calls to services like:
-- [Metals API](https://metals.dev/)
-- [Gold API](https://www.goldapi.io/)
-- Nepal-specific commodity price sources
+- 📊 Historical price analytics and trends
+- 🔔 Price alerts and notifications
+- 🌐 Multi-language support (Nepali, English)
+- 👥 User authentication and multi-user support
+- 📱 Progressive Web App (PWA) for mobile
+- 📤 Export inventory to PDF/CSV
+- 🔄 Backup and restore functionality
 
-## License
+## 📄 License
 
-© 2025 Shree Thina Ganesh Calculator
+© 2025 Shree Thina Ganesh Calculator - MIT License
+
+## ⚠️ Disclaimer
+
+Prices shown are fetched from public sources and are for reference only. Please verify current rates with local dealers before making transactions.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📧 Support
+
+For issues or questions, please open an issue on GitHub.
 
 ---
 
-**Disclaimer**: Prices shown are for reference only. Please verify current rates with local dealers before making transactions.
+Made with ❤️ for the Nepal jewelry community

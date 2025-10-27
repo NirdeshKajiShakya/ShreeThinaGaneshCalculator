@@ -7,6 +7,15 @@ package-lock.json
 .env.local
 .env.production
 
+# Database files (SQLite for local development)
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploaded files (local development only)
+public/uploads/*
+!public/uploads/.gitkeep
+
 # Logs
 logs/
 *.log
