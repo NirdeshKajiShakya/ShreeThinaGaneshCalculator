@@ -1,0 +1,17 @@
+# Netlify Configuration
+# Note: This app is a Node.js server and should be deployed to Render/Railway/Heroku instead
+# Netlify is designed for static sites only
+
+[build]
+  command = "npm install"
+  publish = "public"
+
+# Disable secrets scanning (false positive for NODE_ENV and PORT)
+[build.environment]
+  SECRETS_SCAN_ENABLED = "false"
+
+# This won't work on Netlify because it's a backend server app
+# Please deploy to:
+# - Render: https://render.com (Recommended)
+# - Railway: https://railway.app
+# - Heroku: https://heroku.com

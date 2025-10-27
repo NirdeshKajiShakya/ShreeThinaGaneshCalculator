@@ -12,12 +12,26 @@ if (usePostgres) {
     
     console.log('🔌 Connecting to PostgreSQL database...');
     
-    const pool = new Pool({
+    // Parse connection string to extract host
+    let poolConfig = {
         connectionString: process.env.DATABASE_URL,
         ssl: process.env.NODE_ENV === 'production' ? {
             rejectUnauthorized: false
         } : false
-    });
+    };
+
+    // For Supabase compatibility: Add connection pooling optimizations
+    if (process.env.DATABASE_URL?.includes('supabase.com')) {
+        console.log('🔵 Detected Supabase database');
+        console.log('💡 TIP: Use Supabase Connection Pooler (Session mode) for IPv4 compatibility');
+        console.log('💡 Format: postgresql://postgres.[ref]:[pass]@aws-0-[region].pooler.supabase.com:6543/postgres');
+        
+        // Add pgbouncer mode for connection pooling
+        poolConfig.connectionTimeoutMillis = 5000;
+        poolConfig.max = 20; // Limit connections for serverless
+    }
+    
+    const pool = new Pool(poolConfig);
 
     // Initialize PostgreSQL tables
     const initPostgres = async () => {
@@ -48,24 +62,63 @@ if (usePostgres) {
             console.log('✅ PostgreSQL database initialized');
         } catch (error) {
             console.error('❌ Error initializing PostgreSQL:', error.message);
-            console.error('💡 Make sure DATABASE_URL is set correctly in your environment variables');
-            throw error;
+            
+            // Specific error handling for IPv6 issues
+            if (error.code === 'ENETUNREACH' && error.message.includes('2406:')) {
+                console.error('');
+                console.error('🔴 IPv6 CONNECTION ERROR DETECTED!');
+                console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                console.error('📌 You are using Supabase with Render');
+                console.error('📌 Render does NOT support IPv6 connections');
+                console.error('');
+                console.error('✅ SOLUTION: Use Supabase Connection Pooler');
+                console.error('');
+                console.error('1. Go to Supabase Dashboard → Settings → Database');
+                console.error('2. Find "Connection string" section');
+                console.error('3. Select "Session mode" (NOT Direct connection)');
+                console.error('4. Copy the pooler URL - should look like:');
+                console.error('   postgresql://postgres.[ref]:[pass]@aws-0-[region].pooler.supabase.com:6543/postgres');
+                console.error('');
+                console.error('5. Update DATABASE_URL on Render with the pooler URL');
+                console.error('6. Make sure it has:');
+                console.error('   ✓ pooler.supabase.com (not just supabase.co)');
+                console.error('   ✓ Port 6543 (not 5432)');
+                console.error('');
+                console.error('📚 Full guide: See SUPABASE_RENDER_FIX.md');
+                console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                console.error('');
+            } else {
+                console.error('💡 SOLUTION: Use the INTERNAL Database URL from Render, not External!');
+                console.error('💡 Internal URL format: postgresql://user:pass@dpg-xxxxx-a.region.render.com/dbname');
+                console.error('💡 Find it in: Render Dashboard → Your Database → Connections → Internal Database URL');
+            }
+            
+            // Don't throw - let the app continue running
         }
     };
 
-    initPostgres();
+    // Initialize asynchronously without blocking app startup
+    initPostgres().catch(err => {
+        console.error('💥 PostgreSQL initialization failed, but app will continue running');
+    });
 
     // Wrapper to make PostgreSQL compatible with SQLite-style callbacks
     db = {
         all: (query, params, callback) => {
             pool.query(query, params)
                 .then(result => callback(null, result.rows))
-                .catch(err => callback(err));
+                .catch(err => {
+                    console.error('❌ Database query error:', err.message);
+                    callback(err);
+                });
         },
         get: (query, params, callback) => {
             pool.query(query, params)
                 .then(result => callback(null, result.rows[0]))
-                .catch(err => callback(err));
+                .catch(err => {
+                    console.error('❌ Database query error:', err.message);
+                    callback(err);
+                });
         },
         run: (query, params, callback) => {
             pool.query(query, params)
@@ -80,11 +133,14 @@ if (usePostgres) {
                     }
                 })
                 .catch(err => {
+                    console.error('❌ Database query error:', err.message);
                     if (callback) callback(err);
                 });
         },
         query: pool.query.bind(pool) // Direct access to pool.query for raw queries
     };
+
+    console.log('📦 PostgreSQL database wrapper ready (awaiting connection...)');
 
 } else {
     // SQLite setup for local development

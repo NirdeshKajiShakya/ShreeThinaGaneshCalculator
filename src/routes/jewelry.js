@@ -94,11 +94,15 @@ router.get('/jewelry', (req, res) => {
 router.get('/jewelry/:id', (req, res) => {
     const { id } = req.params;
 
-    db.get(`
-        SELECT id, name, image_path, weight, weight_unit, working_cost, metal_type, purity, created_at
-        FROM jewelry
-        WHERE id = ?
-    `, [id], (err, row) => {
+    const selectQuery = process.env.DATABASE_URL
+        ? `SELECT id, name, image_path, weight, weight_unit, working_cost, metal_type, purity, created_at
+           FROM jewelry
+           WHERE id = $1`
+        : `SELECT id, name, image_path, weight, weight_unit, working_cost, metal_type, purity, created_at
+           FROM jewelry
+           WHERE id = ?`;
+
+    db.get(selectQuery, [id], (err, row) => {
         if (err) {
             console.error('Error fetching jewelry item:', err);
             return res.status(500).json({ error: 'Failed to fetch jewelry item' });
@@ -209,7 +213,11 @@ router.delete('/jewelry/:id', (req, res) => {
     const { id } = req.params;
 
     // First get the image path to delete the file
-    db.get('SELECT image_path FROM jewelry WHERE id = ?', [id], (err, row) => {
+    const selectQuery = process.env.DATABASE_URL 
+        ? 'SELECT image_path FROM jewelry WHERE id = $1'
+        : 'SELECT image_path FROM jewelry WHERE id = ?';
+    
+    db.get(selectQuery, [id], (err, row) => {
         if (err) {
             console.error('Error fetching jewelry for deletion:', err);
             return res.status(500).json({ error: 'Failed to delete jewelry item' });
