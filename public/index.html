@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="description" content="Live gold and silver price tracker for Nepal with jewelry calculator supporting working costs, Tola, Gram, and other units">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Jewelry Calculator">
+    <title>Nepal Gold & Silver Jewelry Calculator</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="manifest" href="manifest.json">
+    <!-- Preload critical resources -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🪙✨ Nepal Gold & Silver Jewelry Calculator</h1>
+            <p class="subtitle">Real-time precious metals price tracking and jewelry cost calculation with working costs</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Metal Selector -->
+            <section class="metal-selector">
+                <h2>Select Metal</h2>
+                <div class="toggle-buttons">
+                    <button id="goldBtn" class="toggle-btn active">
+                        <span class="icon">✨</span>
+                        <span class="label">Gold (सुन)</span>
+                    </button>
+                    <button id="silverBtn" class="toggle-btn">
+                        <span class="icon">🪙</span>
+                        <span class="label">Silver (चाँदी)</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Current Price Display -->
+            <section class="price-display">
+                <h2><span id="metalName">Gold</span> Price</h2>
+                <div class="price-card">
+                    <div class="price-item">
+                        <span class="label">Per Gram:</span>
+                        <span class="price" id="pricePerGram">NPR 0.00</span>
+                    </div>
+                    <div class="price-item">
+                        <span class="label">Per Tola:</span>
+                        <span class="price" id="pricePerTola">NPR 0.00</span>
+                    </div>
+                    <div class="price-item">
+                        <span class="label">Per Ounce:</span>
+                        <span class="price" id="pricePerOunce">NPR 0.00</span>
+                    </div>
+                    <div class="price-item">
+                        <span class="label">Per Kilogram:</span>
+                        <span class="price" id="pricePerKg">NPR 0.00</span>
+                    </div>
+                </div>
+                <div class="last-updated">
+                    Last updated: <span id="lastUpdated">Never</span>
+                </div>
+                <button id="refreshBtn" class="btn-primary">🔄 Refresh Prices</button>
+            </section>
+
+            <!-- Calculator Section -->
+            <section class="calculator">
+                <h2><span id="calculatorMetalName">Gold</span> Jewelry Calculator</h2>
+                <div class="calculator-card">
+                    <div class="input-group">
+                        <label for="weightInput">Enter Weight:</label>
+                        <input type="number" id="weightInput" placeholder="0" step="0.01" min="0">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="unitSelect">Select Unit:</label>
+                        <select id="unitSelect">
+                            <option value="gram">Gram (g)</option>
+                            <option value="tola" selected>Tola (त)</option>
+                            <option value="ounce">Ounce (oz)</option>
+                            <option value="kilogram">Kilogram (kg)</option>
+                            <option value="pound">Pound (lb)</option>
+                            <option value="ana">Ana (आना)</option>
+                            <option value="lal">Lal (लाल)</option>
+                            <option value="ratti">Ratti (रत्ती)</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label for="workingCostInput">Working Cost (NPR):</label>
+                        <input type="number" id="workingCostInput" placeholder="0" step="0.01" min="0">
+                    </div>
+
+                    <button id="calculateBtn" class="btn-calculate">Calculate Jewelry Price</button>
+
+                    <div class="result" id="result">
+                        <div class="result-header">Total Jewelry Price</div>
+                        <div class="result-value" id="resultValue">NPR 0.00</div>
+                        <div class="result-breakdown" id="resultBreakdown"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Price History Chart -->
+            <section class="price-history">
+                <h2>Price History (Today)</h2>
+                <div class="chart-container">
+                    <canvas id="priceChart"></canvas>
+                </div>
+            </section>
+
+            <!-- Purity Selector (Gold Only) -->
+            <section class="purity-selector" id="puritySection" style="display: none;">
+                <h2>Gold Purity</h2>
+                <div class="purity-buttons">
+                    <button class="purity-btn active" data-purity="24">24K (Fine Gold)</button>
+                    <button class="purity-btn" data-purity="22">22K (Hallmark)</button>
+                    <button class="purity-btn" data-purity="21">21K</button>
+                    <button class="purity-btn" data-purity="18">18K</button>
+                </div>
+            </section>
+
+            <!-- Jewelry Inventory Section -->
+            <section class="jewelry-inventory">
+                <h2>💍 Jewelry Inventory</h2>
+                <div class="inventory-controls">
+                    <button id="addJewelryBtn" class="btn-primary">➕ Add New Jewelry</button>
+                    <button id="refreshInventoryBtn" class="btn-secondary">🔄 Refresh</button>
+                </div>
+
+                <div id="jewelryGrid" class="jewelry-grid">
+                    <!-- Jewelry items will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Add Jewelry Modal -->
+            <div id="jewelryModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 id="modalTitle">Add New Jewelry</h3>
+                        <span class="close">&times;</span>
+                    </div>
+                    <form id="jewelryForm" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="jewelryName">Jewelry Name:</label>
+                            <input type="text" id="jewelryName" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="jewelryImage">Image (optional):</label>
+                            <input type="file" id="jewelryImage" accept="image/*">
+                            <div id="imagePreview" class="image-preview"></div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="jewelryWeight">Weight:</label>
+                                <input type="number" id="jewelryWeight" step="0.01" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="jewelryUnit">Unit:</label>
+                                <select id="jewelryUnit">
+                                    <option value="tola" selected>Tola</option>
+                                    <option value="gram">Gram</option>
+                                    <option value="ounce">Ounce</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="jewelryMetal">Metal Type:</label>
+                                <select id="jewelryMetal">
+                                    <option value="silver" selected>Silver</option>
+                                    <option value="gold">Gold</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="jewelryPurity">Purity (Gold only):</label>
+                                <select id="jewelryPurity">
+                                    <option value="24" selected>24K</option>
+                                    <option value="22">22K</option>
+                                    <option value="21">21K</option>
+                                    <option value="18">18K</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="jewelryWorkingCost">Working Cost (NPR):</label>
+                            <input type="number" id="jewelryWorkingCost" step="0.01" min="0" value="0">
+                        </div>
+
+                        <div class="modal-actions">
+                            <button type="button" id="cancelBtn" class="btn-secondary">Cancel</button>
+                            <button type="submit" id="saveBtn" class="btn-primary">Save Jewelry</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>© 2025 Shree Thina Ganesh Jewelry Calculator | Gold & Silver Price Tracker with Working Cost</p>
+            <p class="disclaimer">Formula: (Metal Price × Weight) + Working Cost = Total Jewelry Price. Prices are for reference only. Please verify with local dealers.</p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
