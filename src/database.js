@@ -40,6 +40,20 @@ if (usePostgres) {
             await pool.query('SELECT NOW()');
             console.log('✅ PostgreSQL connection successful');
             
+            // Create users table
+            await pool.query(`
+                CREATE TABLE IF NOT EXISTS users (
+                    id SERIAL PRIMARY KEY,
+                    full_name TEXT NOT NULL,
+                    email TEXT UNIQUE NOT NULL,
+                    password TEXT NOT NULL,
+                    is_admin BOOLEAN DEFAULT false,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            `);
+
+            // Create jewelry table
             await pool.query(`
                 CREATE TABLE IF NOT EXISTS jewelry (
                     id SERIAL PRIMARY KEY,
@@ -56,6 +70,7 @@ if (usePostgres) {
             `);
 
             // Create indexes for better performance
+            await pool.query(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`);
             await pool.query(`CREATE INDEX IF NOT EXISTS idx_metal_type ON jewelry(metal_type)`);
             await pool.query(`CREATE INDEX IF NOT EXISTS idx_created_at ON jewelry(created_at)`);
 
@@ -152,6 +167,20 @@ if (usePostgres) {
 
     // Initialize SQLite database tables
     sqliteDb.serialize(() => {
+        // Create users table
+        sqliteDb.run(`
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                full_name TEXT NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                password TEXT NOT NULL,
+                is_admin INTEGER DEFAULT 0,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        // Create jewelry table
         sqliteDb.run(`
             CREATE TABLE IF NOT EXISTS jewelry (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -168,6 +197,7 @@ if (usePostgres) {
         `);
 
         // Create indexes for better performance
+        sqliteDb.run(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`);
         sqliteDb.run(`CREATE INDEX IF NOT EXISTS idx_metal_type ON jewelry(metal_type)`);
         sqliteDb.run(`CREATE INDEX IF NOT EXISTS idx_created_at ON jewelry(created_at)`);
     });

@@ -3,6 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const db = require('../database');
+const { requireAuth, requireAdmin } = require('./auth');
 
 const router = express.Router();
 
@@ -124,8 +125,8 @@ router.get('/jewelry/:id', (req, res) => {
     });
 });
 
-// Add new jewelry item
-router.post('/jewelry', upload.single('image'), (req, res) => {
+// Add new jewelry item (Admin only)
+router.post('/jewelry', requireAuth, requireAdmin, upload.single('image'), (req, res) => {
     const { name, weight, weight_unit = 'tola', working_cost = 0, metal_type = 'silver', purity = 24 } = req.body;
     const image_path = req.file ? (useCloudStorage ? req.file.path : req.file.path) : null;
 
@@ -153,8 +154,8 @@ router.post('/jewelry', upload.single('image'), (req, res) => {
     });
 });
 
-// Update jewelry item
-router.put('/jewelry/:id', upload.single('image'), (req, res) => {
+// Update jewelry item (Admin only)
+router.put('/jewelry/:id', requireAuth, requireAdmin, upload.single('image'), (req, res) => {
     const { id } = req.params;
     const { name, weight, weight_unit, working_cost, metal_type, purity } = req.body;
     const newImagePath = req.file ? req.file.path : null;
@@ -208,8 +209,8 @@ router.put('/jewelry/:id', upload.single('image'), (req, res) => {
     });
 });
 
-// Delete jewelry item
-router.delete('/jewelry/:id', (req, res) => {
+// Delete jewelry item (Admin only)
+router.delete('/jewelry/:id', requireAuth, requireAdmin, (req, res) => {
     const { id } = req.params;
 
     // First get the image path to delete the file

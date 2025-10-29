@@ -19,6 +19,10 @@
         <header>
             <h1>🪙✨ Nepal Gold & Silver Jewelry Calculator</h1>
             <p class="subtitle">Real-time precious metals price tracking and jewelry cost calculation with working costs</p>
+            <div class="user-info" id="userInfo">
+                <span id="userName"></span>
+                <button id="logoutBtn" class="btn-secondary">Logout</button>
+            </div>
         </header>
 
         <div class="main-content">
@@ -125,7 +129,7 @@
             <section class="jewelry-inventory">
                 <h2>💍 Jewelry Inventory</h2>
                 <div class="inventory-controls">
-                    <button id="addJewelryBtn" class="btn-primary">➕ Add New Jewelry</button>
+                    <button id="addJewelryBtn" class="btn-primary" style="display: none;">➕ Add New Jewelry</button>
                     <button id="refreshInventoryBtn" class="btn-secondary">🔄 Refresh</button>
                 </div>
 
@@ -208,6 +212,30 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="auth.js"></script>
+    <script>
+        // Check authentication on page load
+        if (!requireAuth()) {
+            // User will be redirected to login
+        } else {
+            // Display user info
+            const user = getCurrentUser();
+            const userNameEl = document.getElementById('userName');
+            const addJewelryBtn = document.getElementById('addJewelryBtn');
+            
+            if (user) {
+                userNameEl.textContent = `Welcome, ${user.fullName}${user.isAdmin ? ' (Admin)' : ''}`;
+                
+                // Show add jewelry button only for admins
+                if (user.isAdmin) {
+                    addJewelryBtn.style.display = 'inline-block';
+                }
+            }
+            
+            // Logout handler
+            document.getElementById('logoutBtn').addEventListener('click', logout);
+        }
+    </script>
     <script src="app.js"></script>
 </body>
 </html>

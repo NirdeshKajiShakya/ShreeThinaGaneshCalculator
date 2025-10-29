@@ -710,12 +710,21 @@ class MetalPriceTracker {
                     ${item.working_cost > 0 ? `<div class="price-detail"><span class="detail-label">Work:</span> NPR ${item.working_cost.toFixed(2)}</div>` : ''}
                     <div class="price-detail total"><span class="detail-label"><strong>Total:</strong></span> <strong>NPR ${totalPrice.toFixed(2)}</strong></div>
                 </div>
-                <div class="jewelry-actions">
+                <div class="jewelry-actions" id="jewelry-actions-${item.id}" style="display: none;">
                     <button class="btn-small btn-edit" onclick="event.stopPropagation(); app.editJewelryItem(${item.id})">Edit</button>
                     <button class="btn-small btn-delete" onclick="event.stopPropagation(); app.deleteJewelryItem(${item.id})">Delete</button>
                 </div>
             </div>
         `;
+
+        // Show actions only for admin users
+        setTimeout(() => {
+            const user = getCurrentUser();
+            if (user && user.isAdmin) {
+                const actionsEl = document.getElementById(`jewelry-actions-${item.id}`);
+                if (actionsEl) actionsEl.style.display = 'flex';
+            }
+        }, 0);
 
         // Click handler for showing detailed price breakdown
         div.addEventListener('click', () => this.showJewelryPriceDetails(item));
@@ -858,12 +867,27 @@ class MetalPriceTracker {
             const url = this.editingJewelryId ? `/api/jewelry/${this.editingJewelryId}` : '/api/jewelry';
             const method = this.editingJewelryId ? 'PUT' : 'POST';
 
+            const token = localStorage.getItem('token');
             const response = await fetch(url, {
                 method: method,
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
                 body: formData
             });
 
-            if (!response.ok) throw new Error('Failed to save jewelry item');
+            if (!response.ok) {
+                if (response.status === 401) {
+                    this.showNotification('Please log in to continue', 'error');
+                    setTimeout(() => window.location.href = '/login.html', 1000);
+                    return;
+                }
+                if (response.status === 403) {
+                    this.showNotification('Admin access required to add/edit jewelry', 'error');
+                    return;
+                }
+                throw new Error('Failed to save jewelry item');
+            }
 
             const result = await response.json();
             this.showNotification(result.message, 'success');
@@ -888,11 +912,26 @@ class MetalPriceTracker {
         }
 
         try {
+            const token = localStorage.getItem('token');
             const response = await fetch(`/api/jewelry/${id}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
             });
 
-            if (!response.ok) throw new Error('Failed to delete jewelry item');
+            if (!response.ok) {
+                if (response.status === 401) {
+                    this.showNotification('Please log in to continue', 'error');
+                    setTimeout(() => window.location.href = '/login.html', 1000);
+                    return;
+                }
+                if (response.status === 403) {
+                    this.showNotification('Admin access required to delete jewelry', 'error');
+                    return;
+                }
+                throw new Error('Failed to delete jewelry item');
+            }
 
             const result = await response.json();
             this.showNotification(result.message, 'success');

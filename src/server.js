@@ -35,6 +35,8 @@ app.get('/health', (req, res) => {
 });
 
 // API routes
+const { router: authRouter } = require('./routes/auth');
+app.use('/api/auth', authRouter);
 app.use('/api', require('./routes/gold'));
 app.use('/api', require('./routes/silver'));
 app.use('/api', require('./routes/jewelry'));

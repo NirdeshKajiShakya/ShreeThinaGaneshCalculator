@@ -46,6 +46,37 @@ header {
     border-radius: 15px;
     box-shadow: var(--shadow);
     margin-bottom: 15px;
+    position: relative;
+}
+
+.user-info {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+}
+
+.user-info span {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.user-info #logoutBtn {
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+@media (max-width: 768px) {
+    .user-info {
+        position: static;
+        justify-content: center;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid var(--border-color);
+    }
 }
 
 header h1 {

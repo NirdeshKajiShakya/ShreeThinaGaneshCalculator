@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Admin Login - Nepal Gold & Silver Jewelry Calculator">
+    <meta name="theme-color" content="#667eea">
+    <title>Admin Login - Jewelry Calculator</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="auth.css">
+</head>
+<body class="auth-page admin-page">
+    <div class="auth-container">
+        <div class="auth-card admin-card">
+            <div class="auth-header">
+                <h1>🔐 Admin Portal</h1>
+                <p>Secure access for administrators only</p>
+            </div>
+
+            <form id="adminLoginForm" class="auth-form">
+                <div class="form-group">
+                    <label for="email">Admin Email</label>
+                    <input type="email" id="email" name="email" required autocomplete="email" placeholder="admin@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Admin Password</label>
+                    <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="Enter admin password">
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <label>
+                        <input type="checkbox" id="rememberMe" name="rememberMe">
+                        <span>Keep me logged in</span>
+                    </label>
+                </div>
+
+                <div id="errorMessage" class="error-message" style="display: none;"></div>
+                
+                <button type="submit" class="btn-auth btn-admin" id="adminLoginBtn">
+                    <span class="btn-text">🔓 Admin Login</span>
+                    <span class="btn-loader" style="display: none;">Authenticating...</span>
+                </button>
+            </form>
+
+            <div class="auth-divider">
+                <span>OR</span>
+            </div>
+
+            <div class="auth-links">
+                <p><a href="login.html">← Back to User Login</a></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+        document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const btn = document.getElementById('adminLoginBtn');
+            const btnText = btn.querySelector('.btn-text');
+            const btnLoader = btn.querySelector('.btn-loader');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            // Show loading state
+            btn.disabled = true;
+            btnText.style.display = 'none';
+            btnLoader.style.display = 'inline';
+            errorMessage.style.display = 'none';
+            
+            const formData = {
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+                rememberMe: document.getElementById('rememberMe').checked,
+                isAdmin: true
+            };
+            
+            try {
+                const response = await fetch('/api/auth/admin-login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Store admin info
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('isAdmin', 'true');
+                    
+                    // Redirect to main app
+                    window.location.href = '/';
+                } else {
+                    // Show error
+                    errorMessage.textContent = data.error || 'Admin login failed. Please check your credentials.';
+                    errorMessage.style.display = 'block';
+                    
+                    // Reset button
+                    btn.disabled = false;
+                    btnText.style.display = 'inline';
+                    btnLoader.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Admin login error:', error);
+                errorMessage.textContent = 'Connection error. Please try again.';
+                errorMessage.style.display = 'block';
+                
+                // Reset button
+                btn.disabled = false;
+                btnText.style.display = 'inline';
+                btnLoader.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
